@@ -1,0 +1,46 @@
+{
+  "id": "allocation-summary",
+  "prompt": "summarize my allocation",
+  "holdings": [
+    {
+      "id": "h1",
+      "schemeName": "Parag Parikh Flexi Cap Fund",
+      "amcName": "PPFAS",
+      "units": 0,
+      "investedAmount": 250000,
+      "currentValue": 312000,
+      "assetClass": "Equity",
+      "category": "Flexi Cap / Multi Cap",
+      "inferredAssetBucket": "equity",
+      "inferredEquityBucket": "flexi_multi_cap",
+      "inferredSector": "Others",
+      "assetBreakdown": { "equity": 1, "debt": 0, "commodity": 0, "international": 0, "others": 0 },
+      "confidence": "high",
+      "inferenceSource": ["fixture"]
+    },
+    {
+      "id": "h3",
+      "schemeName": "SBI Gold Fund",
+      "amcName": "SBI",
+      "units": 0,
+      "investedAmount": 60000,
+      "currentValue": 65000,
+      "assetClass": "Commodity / Gold",
+      "category": "Gold",
+      "inferredAssetBucket": "commodity",
+      "inferredSector": "Others",
+      "assetBreakdown": { "equity": 0, "debt": 0, "commodity": 1, "international": 0, "others": 0 },
+      "confidence": "high",
+      "inferenceSource": ["fixture"]
+    }
+  ],
+  "expectedIncludes": [
+    "current portfolio assessment snapshot",
+    "equity",
+    "commodity / gold",
+    "complete the risk profile"
+  ],
+  "forbiddenIncludes": [
+    "guaranteed returns"
+  ]
+}

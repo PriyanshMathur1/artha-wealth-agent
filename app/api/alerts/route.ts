@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/db';
+import { hasDatabase, prisma } from '@/lib/db';
+import { getUserIdOrDevFallback } from '@/lib/server-auth';
 
 export async function GET(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
+  if (!hasDatabase) {
+    return NextResponse.json({ alerts: [], unreadCount: 0 });
+  }
 
   const { searchParams } = new URL(req.url);
   const unreadOnly = searchParams.get('unread') === 'true';
@@ -19,8 +23,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
+  if (!hasDatabase) {
+    return NextResponse.json({ ok: true });
+  }
 
   const body = await req.json() as { action: 'markRead' | 'markAllRead'; id?: number };
   if (body.action === 'markAllRead') {
@@ -35,8 +43,11 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  if (!hasDatabase) {
+    return NextResponse.json({ ok: true });
+  }
   const id = parseInt(new URL(req.url).searchParams.get('id') ?? '0');
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   await prisma.alert.deleteMany({ where: { id, userId } });

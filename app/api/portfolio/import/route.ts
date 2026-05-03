@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { parse as parseCsv } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
-import { prisma } from '@/lib/db';
+import { hasDatabase, prisma } from '@/lib/db';
+import { upsertLocalMf, upsertLocalStock } from '@/lib/local-portfolio-store';
+import { getUserIdOrDevFallback } from '@/lib/server-auth';
 import { STOCK_UNIVERSE } from '@/lib/universe';
 
 type GenericRow = Record<string, unknown>;
@@ -106,7 +107,7 @@ function fallbackSchemeCode(name: string, index: number): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const userId = await getUserIdOrDevFallback();
     if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
     const form = await req.formData();
@@ -155,11 +156,23 @@ export async function POST(req: NextRequest) {
         }
 
         const meta = inferStockMeta(symbol);
-        await prisma.stockHolding.upsert({
-          where: { userId_symbol_accountId: { userId, symbol, accountId } },
-          update: { qty, avgBuyPrice, brokerName },
-          create: {
-            userId,
+        if (hasDatabase) {
+          await prisma.stockHolding.upsert({
+            where: { userId_symbol_accountId: { userId, symbol, accountId } },
+            update: { qty, avgBuyPrice, brokerName },
+            create: {
+              userId,
+              symbol,
+              accountId,
+              name: asString(firstValue(normalized, ['name', 'companyname'])) || meta.name,
+              sector: asString(firstValue(normalized, ['sector'])) || meta.sector,
+              qty,
+              avgBuyPrice,
+              brokerName,
+            },
+          });
+        } else {
+          await upsertLocalStock(userId, {
             symbol,
             accountId,
             name: asString(firstValue(normalized, ['name', 'companyname'])) || meta.name,
@@ -167,8 +180,10 @@ export async function POST(req: NextRequest) {
             qty,
             avgBuyPrice,
             brokerName,
-          },
-        });
+            buyDate: new Date().toISOString(),
+            notes: '',
+          });
+        }
         stocksImported += 1;
         continue;
       }
@@ -186,11 +201,23 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        await prisma.mFHolding.upsert({
-          where: { userId_schemeCode: { userId, schemeCode } },
-          update: { units, avgNav, investedAmount },
-          create: {
-            userId,
+        if (hasDatabase) {
+          await prisma.mFHolding.upsert({
+            where: { userId_schemeCode: { userId, schemeCode } },
+            update: { units, avgNav, investedAmount },
+            create: {
+              userId,
+              schemeCode,
+              schemeName,
+              amcName: asString(firstValue(normalized, ['amcname', 'amc'])) || '',
+              category: asString(firstValue(normalized, ['category'])) || 'Equity',
+              units,
+              avgNav,
+              investedAmount,
+            },
+          });
+        } else {
+          await upsertLocalMf(userId, {
             schemeCode,
             schemeName,
             amcName: asString(firstValue(normalized, ['amcname', 'amc'])) || '',
@@ -198,8 +225,9 @@ export async function POST(req: NextRequest) {
             units,
             avgNav,
             investedAmount,
-          },
-        });
+            buyDate: new Date().toISOString(),
+          });
+        }
         mfImported += 1;
         continue;
       }

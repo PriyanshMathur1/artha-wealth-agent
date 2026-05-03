@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, RefreshCw, BarChart2, TrendingUp, Bell } from 'lucide-react';
+import { Plus, RefreshCw, BarChart2, TrendingUp, Bell, ShieldCheck } from 'lucide-react';
 import { PortfolioSummary, EmptyPortfolio } from '@/components/Portfolio/PortfolioSummary';
 import { ZerodhaImport } from '@/components/Portfolio/ZerodhaImport';
 import { AngelOnePanel } from '@/components/AngelOnePanel';
@@ -154,6 +154,9 @@ export default function PortfolioDashboard() {
           </Link>
           <Link href="/portfolio/mutual-funds" className="flex items-center gap-1.5 text-xs bg-blue-600 text-white font-semibold rounded-lg px-3 py-1.5 hover:bg-blue-500">
             <Plus className="h-3.5 w-3.5" /> Add MF
+          </Link>
+          <Link href="/portfolio/assessment" className="flex items-center gap-1.5 text-xs bg-emerald-600 text-white font-semibold rounded-lg px-3 py-1.5 hover:bg-emerald-500">
+            <ShieldCheck className="h-3.5 w-3.5" /> Portfolio Assessment
           </Link>
         </div>
       </div>
@@ -307,6 +310,9 @@ export default function PortfolioDashboard() {
                   </Link>
                   <Link href="/alerts" className="flex items-center gap-2 w-full text-xs text-stone-400 hover:text-stone-200 border border-stone-700 rounded-lg px-3 py-2 transition-colors">
                     View All Alerts
+                  </Link>
+                  <Link href="/portfolio/assessment" className="flex items-center gap-2 w-full text-xs text-stone-400 hover:text-emerald-500 border border-stone-700 hover:border-emerald-500/40 rounded-lg px-3 py-2 transition-colors">
+                    Run Mutual Fund Portfolio Assessment
                   </Link>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/db';
+import { hasDatabase, prisma } from '@/lib/db';
+import { getLocalMfs, getLocalStocks } from '@/lib/local-portfolio-store';
+import { getUserIdOrDevFallback } from '@/lib/server-auth';
 import { getQuote as yahooQuote } from '@/lib/yahoo';
 import { getCurrentNav, getMFDirection } from '@/lib/mfapi';
 import { getValidToken } from '@/lib/angelone-session';
@@ -48,14 +49,20 @@ async function fetchAngelHoldings(token: string): Promise<Map<string, AngelHoldi
 
 export async function GET() {
   try {
-    const { userId } = await auth();
+    const userId = await getUserIdOrDevFallback();
     if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
-    const [stocks, mfs, cachedTokens] = await Promise.all([
-      prisma.stockHolding.findMany({ where: { userId } }),
-      prisma.mFHolding.findMany({ where: { userId } }),
-      prisma.settings.findMany({ where: { key: { startsWith: 'angel_token_' } } }),
-    ]);
+    const [stocks, mfs, cachedTokens] = hasDatabase
+      ? await Promise.all([
+          prisma.stockHolding.findMany({ where: { userId } }),
+          prisma.mFHolding.findMany({ where: { userId } }),
+          prisma.settings.findMany({ where: { key: { startsWith: 'angel_token_' } } }),
+        ])
+      : await Promise.all([
+          getLocalStocks(userId),
+          getLocalMfs(userId),
+          Promise.resolve([] as Array<{ key: string; value: string }>),
+        ]);
 
     const jwtToken = await getValidToken();
 

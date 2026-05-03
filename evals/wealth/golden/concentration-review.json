@@ -1,0 +1,47 @@
+{
+  "id": "concentration-review",
+  "prompt": "what concentration risks do i have",
+  "holdings": [
+    {
+      "id": "h1",
+      "schemeName": "Single AMC Fund One",
+      "amcName": "Axis",
+      "units": 0,
+      "investedAmount": 200000,
+      "currentValue": 220000,
+      "assetClass": "Equity",
+      "category": "Large Cap",
+      "inferredAssetBucket": "equity",
+      "inferredEquityBucket": "large_cap",
+      "inferredSector": "Others",
+      "assetBreakdown": { "equity": 1, "debt": 0, "commodity": 0, "international": 0, "others": 0 },
+      "confidence": "high",
+      "inferenceSource": ["fixture"]
+    },
+    {
+      "id": "h2",
+      "schemeName": "Single AMC Fund Two",
+      "amcName": "Axis",
+      "units": 0,
+      "investedAmount": 210000,
+      "currentValue": 230000,
+      "assetClass": "Equity",
+      "category": "Mid Cap",
+      "inferredAssetBucket": "equity",
+      "inferredEquityBucket": "mid_cap",
+      "inferredSector": "Others",
+      "assetBreakdown": { "equity": 1, "debt": 0, "commodity": 0, "international": 0, "others": 0 },
+      "confidence": "high",
+      "inferenceSource": ["fixture"]
+    }
+  ],
+  "expectedIncludes": [
+    "portfolio review points",
+    "under-diversified",
+    "One or more AMCs account for over 20%"
+  ],
+  "forbiddenIncludes": [
+    "buy this fund",
+    "sell this fund"
+  ]
+}

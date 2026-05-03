@@ -1,4 +1,4 @@
-import { prisma } from './db';
+import { hasDatabase, prisma } from './db';
 
 export type AlertType =
   | 'PRICE_TARGET_HIT'
@@ -16,6 +16,18 @@ export async function createAlert(params: {
   severity?: 'low' | 'medium' | 'high';
   relatedSymbol?: string;
 }) {
+  if (!hasDatabase) {
+    return {
+      id: 0,
+      userId: params.userId,
+      type: params.type,
+      title: params.title,
+      message: params.message,
+      severity: params.severity ?? 'medium',
+      relatedSymbol: params.relatedSymbol ?? '',
+    };
+  }
+
   return prisma.alert.create({
     data: {
       userId: params.userId,

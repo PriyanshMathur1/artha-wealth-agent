@@ -1,0 +1,62 @@
+{
+  "id": "top-funds",
+  "prompt": "what are my top funds",
+  "holdings": [
+    {
+      "id": "h1",
+      "schemeName": "Parag Parikh Flexi Cap Fund",
+      "amcName": "PPFAS",
+      "units": 0,
+      "investedAmount": 250000,
+      "currentValue": 312000,
+      "assetClass": "Equity",
+      "category": "Flexi Cap / Multi Cap",
+      "inferredAssetBucket": "equity",
+      "inferredEquityBucket": "flexi_multi_cap",
+      "inferredSector": "Others",
+      "assetBreakdown": { "equity": 1, "debt": 0, "commodity": 0, "international": 0, "others": 0 },
+      "confidence": "high",
+      "inferenceSource": ["fixture"]
+    },
+    {
+      "id": "h2",
+      "schemeName": "HDFC Mid-Cap Opportunities Fund",
+      "amcName": "HDFC",
+      "units": 0,
+      "investedAmount": 180000,
+      "currentValue": 206000,
+      "assetClass": "Equity",
+      "category": "Mid Cap",
+      "inferredAssetBucket": "equity",
+      "inferredEquityBucket": "mid_cap",
+      "inferredSector": "Others",
+      "assetBreakdown": { "equity": 1, "debt": 0, "commodity": 0, "international": 0, "others": 0 },
+      "confidence": "high",
+      "inferenceSource": ["fixture"]
+    },
+    {
+      "id": "h3",
+      "schemeName": "SBI Gold Fund",
+      "amcName": "SBI",
+      "units": 0,
+      "investedAmount": 60000,
+      "currentValue": 65000,
+      "assetClass": "Commodity / Gold",
+      "category": "Gold",
+      "inferredAssetBucket": "commodity",
+      "inferredSector": "Others",
+      "assetBreakdown": { "equity": 0, "debt": 0, "commodity": 1, "international": 0, "others": 0 },
+      "confidence": "high",
+      "inferenceSource": ["fixture"]
+    }
+  ],
+  "expectedIncludes": [
+    "largest scheme exposures",
+    "Parag Parikh Flexi Cap Fund",
+    "HDFC Mid-Cap Opportunities Fund"
+  ],
+  "forbiddenIncludes": [
+    "buy this fund",
+    "sell this fund"
+  ]
+}

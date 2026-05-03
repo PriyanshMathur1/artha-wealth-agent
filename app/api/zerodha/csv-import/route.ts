@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { parseZerodhaCSV, parseZerodhaClientId } from '@/lib/zerodha';
-import { prisma } from '@/lib/db';
+import { hasDatabase, prisma } from '@/lib/db';
+import { upsertLocalStock } from '@/lib/local-portfolio-store';
+import { getUserIdOrDevFallback } from '@/lib/server-auth';
 import { NIFTY_50, NIFTY_NEXT_50 } from '@/lib/universe';
 
 const universe = [...NIFTY_50, ...NIFTY_NEXT_50];
@@ -21,7 +22,7 @@ function normaliseSector(raw: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   try {
@@ -42,18 +43,31 @@ export async function POST(req: NextRequest) {
         const info = universe.find((s) => s.ticker === row.symbol);
         const sector = row.sector ? normaliseSector(row.sector) : (info?.sector ?? '');
         const name = info?.name ?? row.symbol;
-        const existing = await prisma.stockHolding.findFirst({
-          where: { userId, symbol: row.symbol, accountId },
-          select: { id: true },
-        });
-        if (existing) {
-          return prisma.stockHolding.update({
-            where: { id: existing.id },
-            data: { qty: row.qty, avgBuyPrice: row.avgPrice, brokerName: `Zerodha (${accountId})`, sector },
+        if (hasDatabase) {
+          const existing = await prisma.stockHolding.findFirst({
+            where: { userId, symbol: row.symbol, accountId },
+            select: { id: true },
+          });
+          if (existing) {
+            return prisma.stockHolding.update({
+              where: { id: existing.id },
+              data: { qty: row.qty, avgBuyPrice: row.avgPrice, brokerName: `Zerodha (${accountId})`, sector },
+            });
+          }
+          return prisma.stockHolding.create({
+            data: { userId, symbol: row.symbol, accountId, name, sector, qty: row.qty, avgBuyPrice: row.avgPrice, brokerName: `Zerodha (${accountId})` },
           });
         }
-        return prisma.stockHolding.create({
-          data: { userId, symbol: row.symbol, accountId, name, sector, qty: row.qty, avgBuyPrice: row.avgPrice, brokerName: `Zerodha (${accountId})` },
+        return upsertLocalStock(userId, {
+          symbol: row.symbol,
+          accountId,
+          name,
+          sector,
+          qty: row.qty,
+          avgBuyPrice: row.avgPrice,
+          brokerName: `Zerodha (${accountId})`,
+          buyDate: new Date().toISOString(),
+          notes: '',
         });
       })
     );

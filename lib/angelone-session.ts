@@ -1,4 +1,4 @@
-import { prisma } from './db';
+import { hasDatabase, prisma } from './db';
 
 const API_BASE = process.env.ANGEL_ONE_API_BASE ?? '';
 const API_KEY  = process.env.NEXT_PUBLIC_ANGEL_ONE_CLIENT_ID ?? '';
@@ -43,18 +43,20 @@ async function refreshWithToken(refreshToken: string): Promise<string | null> {
     if (!data.status || !data.data?.jwtToken) return null;
 
     // Persist the new tokens
-    await Promise.all([
-      prisma.settings.upsert({
-        where: { key: 'angel_one_jwt' },
-        update: { value: data.data.jwtToken },
-        create: { key: 'angel_one_jwt', value: data.data.jwtToken },
-      }),
-      prisma.settings.upsert({
-        where: { key: 'angel_one_refresh_token' },
-        update: { value: data.data.refreshToken },
-        create: { key: 'angel_one_refresh_token', value: data.data.refreshToken },
-      }),
-    ]);
+    if (hasDatabase) {
+      await Promise.all([
+        prisma.settings.upsert({
+          where: { key: 'angel_one_jwt' },
+          update: { value: data.data.jwtToken },
+          create: { key: 'angel_one_jwt', value: data.data.jwtToken },
+        }),
+        prisma.settings.upsert({
+          where: { key: 'angel_one_refresh_token' },
+          update: { value: data.data.refreshToken },
+          create: { key: 'angel_one_refresh_token', value: data.data.refreshToken },
+        }),
+      ]);
+    }
 
     return data.data.jwtToken;
   } catch {
@@ -65,6 +67,10 @@ async function refreshWithToken(refreshToken: string): Promise<string | null> {
 // Returns a valid Angel One JWT — auto-refreshes if expired.
 // Falls back to the env var token (API-key level, for market data only).
 export async function getValidToken(): Promise<string> {
+  if (!hasDatabase) {
+    return process.env.ANGEL_ONE_API_TOKEN ?? '';
+  }
+
   const [jwtRecord, refreshRecord] = await Promise.all([
     prisma.settings.findUnique({ where: { key: 'angel_one_jwt' } }),
     prisma.settings.findUnique({ where: { key: 'angel_one_refresh_token' } }),

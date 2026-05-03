@@ -10,17 +10,22 @@
     "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "eval": "tsx evals/run.ts",
+    "eval:smoke": "tsx evals/run.ts --no-llm",
+    "eval:wealth": "tsx evals/wealth/run.ts",
+    "ralph:parallel": "./scripts/ralph-parallel-dispatch.sh"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.7",
+    "@langchain/core": "^1.1.44",
+    "@langchain/langgraph": "^1.2.9",
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@swc/helpers": "^0.5.21",
     "@types/nodemailer": "^8.0.0",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.5.0",
     "csv-parse": "^6.2.1",
     "dotenv": "^17.4.2",
     "fast-xml-parser": "^5.7.2",
@@ -35,9 +40,11 @@
     "react-dom": "^18",
     "recharts": "^2.12.7",
     "swr": "^2.2.5",
+    "tailwind-merge": "^3.5.0",
     "xlsx": "^0.18.5",
     "yahoo-finance2": "3.14.0",
-    "yocto-queue": "^1.2.2"
+    "yocto-queue": "^1.2.2",
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
@@ -51,6 +58,7 @@
     "null-loader": "^4.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

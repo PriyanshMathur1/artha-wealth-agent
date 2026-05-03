@@ -1,0 +1,20 @@
+{
+  "id": "mf-compare-basic",
+  "prompt": "PPFAS Flexi Cap vs Quant Active Fund",
+  "intent": "compare",
+  "mustContain": [
+    "SEBI"
+  ],
+  "mustNotContain": [
+    "guaranteed",
+    "you should buy"
+  ],
+  "shapeChecks": [
+    "meta.compareKind === 'mf'",
+    "agents.length >= 1",
+    "meta.compliance.passed === true"
+  ],
+  "requireCompliance": true,
+  "rubric": "The compare agent should run both sides and surface the dimensions where one fund is stronger. It should NOT recommend one fund over the other in directive language. It should note that past performance does not guarantee future results.",
+  "notes": "Anchors the MF compare path. Catches regressions in the router's vs/versus split logic."
+}

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/db';
+import { hasDatabase, prisma } from '@/lib/db';
 import { STOCK_UNIVERSE } from '@/lib/universe';
 import { getValidToken } from '@/lib/angelone-session';
 import { resolveToken } from '@/lib/scripmaster';
+import { getUserIdOrDevFallback } from '@/lib/server-auth';
 
 const API_BASE = process.env.ANGEL_ONE_API_BASE ?? '';
 
@@ -19,8 +19,10 @@ function angelHeaders(token: string) {
 }
 
 export async function GET() {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
+  if (!hasDatabase) return NextResponse.json([]);
 
   const items = await prisma.watchlist.findMany({ where: { userId }, orderBy: { addedAt: 'desc' } });
   if (!items.length) return NextResponse.json([]);
@@ -62,8 +64,16 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
+  if (!hasDatabase) {
+    const { symbol } = await req.json() as { symbol: string };
+    if (!symbol) return NextResponse.json({ error: 'symbol required' }, { status: 400 });
+    const sym = symbol.toUpperCase();
+    const info = STOCK_UNIVERSE.find((s) => s.ticker === sym);
+    return NextResponse.json({ symbol: sym, name: info?.name ?? sym, sector: info?.sector ?? '' }, { status: 201 });
+  }
 
   const { symbol } = await req.json() as { symbol: string };
   if (!symbol) return NextResponse.json({ error: 'symbol required' }, { status: 400 });
@@ -78,8 +88,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
+  if (!hasDatabase) return NextResponse.json({ ok: true });
 
   const symbol = new URL(req.url).searchParams.get('symbol')?.toUpperCase();
   if (!symbol) return NextResponse.json({ error: 'symbol required' }, { status: 400 });

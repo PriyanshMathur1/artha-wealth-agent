@@ -8,7 +8,7 @@ import { Sparkles } from 'lucide-react';
 const DISMISS_KEY = 'artha:ask-ai-fab-seen';
 
 /**
- * Floating bottom-right "Ask AI" entry point for the multi-agent chat.
+ * Floating bottom-right "Ask AI" entry point for Artha Wealth.
  * Hidden on the /chat page itself and on auth pages.
  */
 export function AskAIFab() {
@@ -46,7 +46,7 @@ export function AskAIFab() {
     <Link
       href="/chat"
       onClick={markSeen}
-      aria-label="Open Ralph — Artha's AI assistant"
+      aria-label="Open Artha Wealth"
       className="group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 px-4 py-3 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-white/20 transition-all hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 sm:bottom-6 sm:right-6"
     >
       <span className="relative flex h-5 w-5 items-center justify-center">
@@ -60,7 +60,7 @@ export function AskAIFab() {
       </span>
       <span className="text-sm font-semibold tracking-tight">Ask AI</span>
       <span className="hidden rounded-full bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider sm:inline">
-        Ralph
+        Artha Wealth
       </span>
     </Link>
   );

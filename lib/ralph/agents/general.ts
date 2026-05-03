@@ -7,7 +7,7 @@
  * configured, the orchestrator catches the throw and emits a polite stub.
  */
 
-import { openAIChat } from '@/lib/llm/openai';
+import { getPreferredChatModel, openAIChat } from '@/lib/llm/openai';
 import type { AgentFinding, ChatTurn } from '../types';
 
 function compactTurns(turns: ChatTurn[], maxChars = 4000): string {
@@ -29,7 +29,7 @@ function compactTurns(turns: ChatTurn[], maxChars = 4000): string {
  * raw token usage so the orchestrator can include it in `meta.tokenUsage`.
  */
 export async function runGeneralAnswerAgent(turns: ChatTurn[]): Promise<{ finding: AgentFinding; usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number } }> {
-  const model = process.env.LLM_MODEL ?? process.env.OPENAI_MODEL ?? 'llama-3.3-70b-versatile';
+  const model = getPreferredChatModel();
   const transcript = compactTurns(turns);
 
   const system = [
@@ -74,4 +74,3 @@ export async function runGeneralAnswerAgent(turns: ChatTurn[]): Promise<{ findin
     usage: res.usage,
   };
 }
-

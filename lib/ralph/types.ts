@@ -83,6 +83,22 @@ export interface RalphResponse {
     compareRight?: string;
     latencyMs: number;
     tokenUsage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+    /** Populated by `applyCompliance` (lib/ralph/compliance.ts). Present on
+     *  every response that completes successfully; absent only on
+     *  pre-compliance drafts (which should never reach the wire). */
+    compliance?: {
+      passed: boolean;
+      edits: string[];
+      rulesFired: string[];
+      disclaimerAppended: boolean;
+    };
+    /** Populated by the data layer (lib/data/source.ts). Lets the UI badge
+     *  responses with a "data 7m old" pill when staleness matters. */
+    dataFreshness?: {
+      oldestSourceAt?: string;     // ISO timestamp
+      anyStale?: boolean;
+      sources?: Array<{ name: string; fetchedAt: string; stale: boolean }>;
+    };
   };
 }
 

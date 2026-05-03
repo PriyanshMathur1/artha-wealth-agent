@@ -38,3 +38,33 @@ Verified:
   sandbox-only (Prisma not generated locally) and don't appear on Vercel.
 
 `<ralph>COMPLETE</ralph>`
+
+---
+
+## Iteration 3 — best-in-finance enhancement (kickoff)
+
+New chapter. Goal: take the working chat from a polished demo to
+production-grade for the Indian retail-investor market. Four axes:
+SEBI compliance, streaming, multi-source data, eval harness.
+
+Run mode: parallel worktrees. See `RALPH_TASK.md` "Worktree contract"
+for which group owns which files.
+
+Pre-built scaffolds in this kickoff (Ralph EXTENDS, doesn't replace):
+- `lib/ralph/compliance.ts` — full SEBI rule registry, deterministic
+  rewrite engine, idempotent disclaimer. Wired into orchestrator on
+  every return path. LLM second-pass left as a stub for Group 1.
+- `lib/ralph/stream.ts` — SSE event types + `serializeSSE`. Group 2
+  builds the route + UI on top.
+- `lib/data/source.ts` — `DataSource<T>` interface + `withFallback`
+  helper with cooldown/cache. Group 3 registers per-source adapters.
+- `lib/data/marketState.ts` — `isMarketOpen` for IST + holiday list.
+- `evals/run.ts`, `evals/judge.ts`, `evals/golden/*.json` — runner
+  skeleton + 2 starter fixtures (one of which validates the
+  compliance layer end-to-end). Group 4 fills in the rest.
+
+Iteration 3 hasn't ticked any [ ] in RALPH_TASK.md yet — that's
+Ralph's job. The wiring of `applyCompliance` into the orchestrator
+in this kickoff IS the thing that makes Group 1's first checkbox
+(the function exists + is called) already partially true; Ralph
+just needs to satisfy the remaining bullets.

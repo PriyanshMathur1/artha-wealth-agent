@@ -25,12 +25,21 @@ in order, then make ONE incremental change toward an unchecked box in
 
 ## Rules
 1. **One unchecked box per iteration.** Pick the lowest-numbered unchecked one.
+   In worktree mode (env `RALPH_GROUP=N` is set, or `.ralph/current-group`
+   exists), only consider boxes annotated `<!-- group: N -->`. Ignore boxes
+   from other groups even if they're unchecked.
 2. **Update `progress.md`** at the end of each iteration with what changed.
+   Prefix the entry with the group number when in worktree mode.
 3. **Append to `guardrails.md`** when you hit a failure mode worth remembering.
 4. **Stop and rotate context** when this conversation crosses ~70k tokens. State
    lives in files; you can resume cleanly.
-5. **Run `npx tsc --noEmit`** before declaring a box `[x]`.
-6. Output `<ralph>COMPLETE</ralph>` only when every `[ ]` in `RALPH_TASK.md` is `[x]`.
+5. **Run `npx tsc --noEmit`** before declaring a box `[x]`. In worktree mode,
+   restrict to the files your group is allowed to touch (see "Worktree
+   contract" in RALPH_TASK.md). If a TS error appears in a file outside your
+   group's scope, do NOT fix it — note it in progress.md and skip.
+6. Output `<ralph>COMPLETE</ralph>` only when every `[ ]` in YOUR group is
+   `[x]` (worktree mode), or when every `[ ]` in `RALPH_TASK.md` is `[x]`
+   (single-context mode).
 7. Output `<ralph>GUTTER</ralph>` if the same fix has been attempted three times.
 
 ## Style

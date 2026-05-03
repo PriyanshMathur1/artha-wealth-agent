@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { runRebalance } from '@/lib/rebalancer';
-import { prisma } from '@/lib/db';
+import { hasDatabase, prisma } from '@/lib/db';
 import { createAlert } from '@/lib/alerts';
+import { getUserIdOrDevFallback } from '@/lib/server-auth';
 
 export async function GET() {
-  const { userId } = await auth();
+  const userId = await getUserIdOrDevFallback();
   if (!userId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
   try {
     const report = await runRebalance(userId);
 
-    await prisma.rebalanceHistory.create({
-      data: { userId, report: JSON.stringify(report) },
-    });
+    if (hasDatabase) {
+      await prisma.rebalanceHistory.create({
+        data: { userId, report: JSON.stringify(report) },
+      });
+    }
 
     const urgentCount = report.review.filter((r) => r.urgency === 'high').length;
     if (urgentCount > 0) {

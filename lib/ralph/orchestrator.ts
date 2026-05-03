@@ -21,6 +21,7 @@ import { runMFAgent } from './agents/mf';
 import { runCompareAgent } from './agents/compare';
 import { runPortfolioAgent } from './agents/portfolio';
 import { runGeneralAnswerAgent } from './agents/general';
+import { applyCompliance } from './compliance';
 
 function asString(x: unknown, fallback = ''): string {
   return typeof x === 'string' && x.length > 0 ? x : fallback;
@@ -33,12 +34,25 @@ function asStringArray(x: unknown): string[] {
 /**
  * Process a chat request end-to-end.
  *
+ * Public entry point. ALL paths funnel through `applyCompliance` here —
+ * adding a new return inside `ralphRespondInternal` is automatically
+ * sanitised before reaching the user. See `lib/ralph/compliance.ts`.
+ *
  * @param req `turns` is the full conversation; only the latest user message
  *            is routed. `userId` is required for the portfolio intent and
  *            optional everywhere else.
- * @returns A `RalphResponse` shape the chat UI renders directly.
+ * @returns A `RalphResponse` whose `meta.compliance` is populated.
  */
 export async function ralphRespond(req: RalphRequest): Promise<RalphResponse> {
+  const draft = await ralphRespondInternal(req);
+  return applyCompliance(draft);
+}
+
+/**
+ * Internal — produces an UNSANITISED draft response. Do not export.
+ * Callers MUST go through `ralphRespond` so compliance is enforced.
+ */
+async function ralphRespondInternal(req: RalphRequest): Promise<RalphResponse> {
   const started = Date.now();
   const lastUser = [...req.turns].reverse().find((t) => t.role === 'user')?.content ?? '';
   const route = routeRalph(lastUser);

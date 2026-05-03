@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, RefreshCw, ShieldCheck } from 'lucide-react';
 import { MFHoldingsTable } from '@/components/Portfolio/MFHoldingsTable';
 import { AddMFModal } from '@/components/Portfolio/AddMFModal';
 
@@ -72,6 +73,12 @@ export default function MutualFundsPage() {
           <button onClick={() => load()} className="p-2 text-stone-500 hover:text-stone-300 border border-stone-700 rounded-lg">
             <RefreshCw className="h-4 w-4" />
           </button>
+          <Link
+            href="/portfolio/assessment"
+            className="flex items-center gap-1.5 text-sm border border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold rounded-lg px-4 py-2 hover:bg-emerald-100"
+          >
+            <ShieldCheck className="h-4 w-4" /> Assessment
+          </Link>
           <button
             onClick={() => setShowAdd(true)}
             className="flex items-center gap-1.5 text-sm bg-blue-600 text-white font-semibold rounded-lg px-4 py-2 hover:bg-blue-500"

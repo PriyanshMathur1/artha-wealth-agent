@@ -1,5 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -22,18 +21,16 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 // If Clerk keys are missing (common in local/dev previews),
-// skip auth entirely to avoid dev-server proxy/socket errors.
+// still install Clerk middleware so `auth()` can detect it,
+// but skip route protection.
 const hasClerkKeys = Boolean(process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
-const middleware = hasClerkKeys
-  ? clerkMiddleware(async (auth, req) => {
-      if (!isPublicRoute(req)) {
-        await auth.protect();
-      }
-    })
-  : () => NextResponse.next();
-
-export default middleware;
+export default clerkMiddleware(async (auth, req) => {
+  if (!hasClerkKeys) return;
+  if (!isPublicRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: ['/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)', '/(api|trpc)(.*)'],

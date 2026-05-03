@@ -38,7 +38,7 @@ function Navbar() {
               <Search className="h-3.5 w-3.5" /> Screener
             </Link>
             <Link href="/chat" className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-              <MessageSquare className="h-3.5 w-3.5" /> Chat
+              <MessageSquare className="h-3.5 w-3.5" /> Artha Wealth
             </Link>
             <Link href="/portfolio" className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900">
               <LayoutDashboard className="h-3.5 w-3.5" /> Portfolio
