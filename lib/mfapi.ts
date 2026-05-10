@@ -103,24 +103,28 @@ function navDaysAgo(data: NavEntry[], daysAgo: number): number | null {
 }
 
 export async function getMFTrailingReturns(schemeCode: string): Promise<TrailingReturns> {
-  const detail = await getMFDetail(schemeCode);
-  const data = detail.data;
-  if (!data.length) return { '1W': null, '1M': null, '3M': null, '6M': null, '1Y': null };
+  try {
+    const detail = await getMFDetail(schemeCode);
+    const data = detail.data;
+    if (!data.length) return { '1W': null, '1M': null, '3M': null, '6M': null, '1Y': null };
 
-  const currentNav = parseNav(data[0].nav);
+    const currentNav = parseNav(data[0].nav);
 
-  function pct(old: number | null): number | null {
-    if (!old || old === 0) return null;
-    return ((currentNav - old) / old) * 100;
+    function pct(old: number | null): number | null {
+      if (!old || old === 0) return null;
+      return ((currentNav - old) / old) * 100;
+    }
+
+    return {
+      '1W': pct(navDaysAgo(data, 7)),
+      '1M': pct(navDaysAgo(data, 30)),
+      '3M': pct(navDaysAgo(data, 90)),
+      '6M': pct(navDaysAgo(data, 180)),
+      '1Y': pct(navDaysAgo(data, 365)),
+    };
+  } catch (error) {
+    return { '1W': null, '1M': null, '3M': null, '6M': null, '1Y': null };
   }
-
-  return {
-    '1W': pct(navDaysAgo(data, 7)),
-    '1M': pct(navDaysAgo(data, 30)),
-    '3M': pct(navDaysAgo(data, 90)),
-    '6M': pct(navDaysAgo(data, 180)),
-    '1Y': pct(navDaysAgo(data, 365)),
-  };
 }
 
 // Returns the latest NAV as a float. Caches in MFNavCache table if prisma is provided.
@@ -132,41 +136,45 @@ export async function getCurrentNav(schemeCode: string): Promise<number> {
 }
 
 export async function getMFDirection(schemeCode: string): Promise<MFDirection> {
-  const detail = await getMFDetail(schemeCode);
-  const data = detail.data;
-  if (!data.length) {
+  try {
+    const detail = await getMFDetail(schemeCode);
+    const data = detail.data;
+    if (!data.length) {
+      return { status: 'sideways', trailing3M: null, trailing1Y: null, trend: [], consecutiveUnderperformMonths: 0 };
+    }
+
+    const currentNav = parseNav(data[0].nav);
+    const nav3MAgo = navDaysAgo(data, 90);
+    const nav1YAgo = navDaysAgo(data, 365);
+
+    const trailing3M = nav3MAgo ? ((currentNav - nav3MAgo) / nav3MAgo) * 100 : null;
+    const trailing1Y = nav1YAgo ? ((currentNav - nav1YAgo) / nav1YAgo) * 100 : null;
+
+    const trend = data
+      .slice(0, 180)
+      .filter((_, i) => i % 7 === 0)
+      .map((e) => parseNav(e.nav))
+      .reverse();
+
+    let consecutiveUnderperformMonths = 0;
+    for (let m = 1; m <= 6; m++) {
+      const old = navDaysAgo(data, m * 30);
+      const ref = navDaysAgo(data, (m + 1) * 30);
+      if (old && ref && old < ref) {
+        consecutiveUnderperformMonths++;
+      } else {
+        break;
+      }
+    }
+
+    let status: 'positive' | 'negative' | 'sideways' = 'sideways';
+    if (trailing3M !== null) {
+      if (trailing3M > 2) status = 'positive';
+      else if (trailing3M < -2) status = 'negative';
+    }
+
+    return { status, trailing3M, trailing1Y, trend, consecutiveUnderperformMonths };
+  } catch (error) {
     return { status: 'sideways', trailing3M: null, trailing1Y: null, trend: [], consecutiveUnderperformMonths: 0 };
   }
-
-  const currentNav = parseNav(data[0].nav);
-  const nav3MAgo = navDaysAgo(data, 90);
-  const nav1YAgo = navDaysAgo(data, 365);
-
-  const trailing3M = nav3MAgo ? ((currentNav - nav3MAgo) / nav3MAgo) * 100 : null;
-  const trailing1Y = nav1YAgo ? ((currentNav - nav1YAgo) / nav1YAgo) * 100 : null;
-
-  const trend = data
-    .slice(0, 180)
-    .filter((_, i) => i % 7 === 0)
-    .map((e) => parseNav(e.nav))
-    .reverse();
-
-  let consecutiveUnderperformMonths = 0;
-  for (let m = 1; m <= 6; m++) {
-    const old = navDaysAgo(data, m * 30);
-    const ref = navDaysAgo(data, (m + 1) * 30);
-    if (old && ref && old < ref) {
-      consecutiveUnderperformMonths++;
-    } else {
-      break;
-    }
-  }
-
-  let status: 'positive' | 'negative' | 'sideways' = 'sideways';
-  if (trailing3M !== null) {
-    if (trailing3M > 2) status = 'positive';
-    else if (trailing3M < -2) status = 'negative';
-  }
-
-  return { status, trailing3M, trailing1Y, trend, consecutiveUnderperformMonths };
 }
