@@ -18,7 +18,7 @@
 
 <br />
 
-**[→ Try it live: artha-olive.vercel.app](https://artha-olive.vercel.app/)**
+**[→ Try it live: artha-terminal-v2.vercel.app](https://artha-terminal-v2.vercel.app/)**
 
 <br />
 
@@ -30,7 +30,7 @@
 
 ## Live Demo
 
-> **[→ Try it live: artha-olive.vercel.app](https://artha-olive.vercel.app/)**
+> **[→ Try it live: artha-terminal-v2.vercel.app](https://artha-terminal-v2.vercel.app/)**
 >
 > Sign up with any email → browse the screener → search any NSE stock (try `RELIANCE`, `TCS`, `INFY`) → click **Deep Scan** to run the AI.
 
@@ -67,6 +67,7 @@ No spreadsheets. No juggling 10 browser tabs. Just open the terminal and decide.
 | 🔔 | **Alerts & Watchlist** | Price alerts, signal-flip alerts, daily/weekly email digest |
 | 📈 | **Interactive Charts** | TradingView-quality price charts — 1M to 5Y, Angel One + Yahoo fallback |
 | 💰 | **Mutual Funds** | Track SIP/lump-sum holdings with live NAV, 1Y/3Y/5Y trailing returns |
+| ⚡ | **Optimized RAG AI** | Advanced AI assistant with financial calculation tools, concise professional tone, and minimal UI |
 
 ---
 

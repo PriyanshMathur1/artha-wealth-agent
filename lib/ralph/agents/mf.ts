@@ -46,7 +46,12 @@ async function resolveScheme(query: string): Promise<MFScheme | null> {
     }
   }
 
-  const matches = await searchMFSchemes(q, 30);
+  let matches;
+  try {
+    matches = await searchMFSchemes(q, 30);
+  } catch (error) {
+    return null;
+  }
   if (!matches.length) return null;
 
   // Prefer "Direct" + "Growth" plans, then shortest scheme name.
