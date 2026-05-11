@@ -233,6 +233,17 @@ export function detectChartPattern(
   return { name: 'Consolidation — No Clear Pattern', bullish: price > dma50, confidence: 'low' };
 }
 
+// Find local swing highs and lows (window of 3)
+export function findSwings(bars: HistoryBar[]): { swingHighs: number[]; swingLows: number[] } {
+  const swingHighs: number[] = [];
+  const swingLows: number[] = [];
+  for (let i = 1; i < bars.length - 1; i++) {
+    if (bars[i].high > bars[i - 1].high && bars[i].high > bars[i + 1].high) swingHighs.push(bars[i].high);
+    if (bars[i].low < bars[i - 1].low && bars[i].low < bars[i + 1].low) swingLows.push(bars[i].low);
+  }
+  return { swingHighs, swingLows };
+}
+
 // Nearest support / resistance from recent swing pivots
 export interface KeyLevels {
   support1: number;
@@ -250,13 +261,7 @@ export function calcKeyLevels(bars: HistoryBar[], dma50: number, dma200: number)
   const price = bars[bars.length - 1].close;
   const recent = bars.slice(-60);
 
-  // Find local swing highs and lows (window of 3)
-  const swingHighs: number[] = [];
-  const swingLows: number[] = [];
-  for (let i = 1; i < recent.length - 1; i++) {
-    if (recent[i].high > recent[i - 1].high && recent[i].high > recent[i + 1].high) swingHighs.push(recent[i].high);
-    if (recent[i].low < recent[i - 1].low && recent[i].low < recent[i + 1].low) swingLows.push(recent[i].low);
-  }
+  const { swingHighs, swingLows } = findSwings(recent);
 
   // Add MAs as levels
   const supports = [...swingLows, dma50, dma200].filter((l) => l < price).sort((a, b) => b - a);
