@@ -29,8 +29,13 @@ export async function GET() {
 
   const jwtToken = await getValidToken();
   const tokenToSymbol = new Map<string, string>();
+
+  const tokenKeys = items.map((item) => `angel_token_${item.symbol}`);
+  const settings = await prisma.settings.findMany({ where: { key: { in: tokenKeys } } });
+  const settingsMap = new Map(settings.map((s) => [s.key, s.value]));
+
   for (const item of items) {
-    let token = (await prisma.settings.findUnique({ where: { key: `angel_token_${item.symbol}` } }))?.value;
+    let token = settingsMap.get(`angel_token_${item.symbol}`);
     if (!token) token = resolveToken(item.symbol) ?? undefined;
     if (token) tokenToSymbol.set(token, item.symbol);
   }

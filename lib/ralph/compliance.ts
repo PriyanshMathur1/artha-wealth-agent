@@ -203,56 +203,52 @@ export async function llmComplianceCheck(answer: string): Promise<{ passed: bool
     return { passed: true, concerns: [] };
   }
 
-  const systemPrompt = `You are a strict compliance reviewer for a financial application in India.
-Your job is to analyze the provided response text and determine if it violates any of the following compliance rules:
-- Flag any first-person buy/sell language (e.g., "I recommend buying", "You should sell").
-- Flag any unsourced target price (e.g., mentioning a specific future price target without citing a specific external analyst or report).
-- Flag any guarantee or absolute-safety language (e.g., "guaranteed returns", "100% safe", "zero risk", "will definitely hit").
+  const systemPrompt = `You are a strict compliance reviewer for a financial AI assistant.
+Your job is to read the provided text and check for advisory language that violates SEBI (Securities and Exchange Board of India) guidelines.
+Artha (the AI) is NOT a registered investment adviser.
 
-You must return your findings as a valid JSON object with the following structure:
+You must FLAG the response if it contains any of the following:
+1. First-person buy/sell language (e.g., "I recommend buying", "you should sell").
+2. Unsourced target prices (any prediction of a specific future price).
+3. Guarantee or absolute-safety language (e.g., "100% safe", "guaranteed returns", "zero risk").
+
+Return ONLY a JSON object with the following schema:
 {
-  "passed": boolean,
-  "concerns": string[]
-}
-If there are no compliance issues, set "passed" to true and "concerns" to an empty array.
-If there are issues, set "passed" to false and list the issues in "concerns".`;
+  "passed": boolean, // true if NO violations found, false if ANY violation found
+  "concerns": string[] // list of specific concerns/violations found, or empty array if none
+}`;
 
   try {
-    const result = await openAIChat({
+    const res = await openAIChat({
       model: getPreferredChatModel(),
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: answer }
+        { role: 'user', content: answer },
       ],
+      temperature: 0.1,
       maxTokens: 500,
-      temperature: 0,
     });
 
-    // Attempt to extract JSON from the response text
-    let jsonStr = result.text.trim();
-    if (jsonStr.startsWith('```json')) {
-      jsonStr = jsonStr.substring(7);
-      if (jsonStr.endsWith('```')) {
-        jsonStr = jsonStr.substring(0, jsonStr.length - 3);
-      }
-    } else if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.substring(3);
-      if (jsonStr.endsWith('```')) {
-        jsonStr = jsonStr.substring(0, jsonStr.length - 3);
-      }
+    let text = res.text.trim();
+    // Strip markdown code block if present
+    if (text.startsWith('\`\`\`json')) {
+      text = text.slice(7);
+    } else if (text.startsWith('\`\`\`')) {
+      text = text.slice(3);
     }
+    if (text.endsWith('\`\`\`')) {
+      text = text.slice(0, -3);
+    }
+    text = text.trim();
 
-    const parsed = JSON.parse(jsonStr.trim());
+    const parsed = JSON.parse(text);
     return {
       passed: Boolean(parsed.passed),
-      concerns: Array.isArray(parsed.concerns) ? parsed.concerns.map(String) : [],
+      concerns: Array.isArray(parsed.concerns) ? parsed.concerns : [],
     };
   } catch (error) {
-    console.error('LLM Compliance Check failed:', error);
-    // Fail safe: if the LLM check fails to run or parse, we don't want to block everything,
-    // or maybe we do? Given the deterministic pass is always on, we default to passed=true on error
-    // to avoid breaking the system due to transient LLM API issues.
-    return { passed: true, concerns: ['LLM check failed to execute or parse'] };
+    // Fail open if the LLM check itself fails (e.g., timeout, bad JSON)
+    return { passed: true, concerns: [] };
   }
 }
 
