@@ -214,13 +214,13 @@ export async function getHistory(
   const cached = getCached<HistoryBar[]>(cacheKey);
   if (cached) return cached;
 
-  const result = await withRetry(() => yahooFinance.historical(symbol, {
+  const result = await withRetry(() => yahooFinance.chart(symbol, {
     period1: getPeriodStart(period),
     period2: new Date(),
     interval: '1d',
   }));
 
-  const data: HistoryBar[] = result
+  const data: HistoryBar[] = (result.quotes || [])
     .filter((bar) => bar.close != null)
     .map((bar) => ({
       date: bar.date instanceof Date ? bar.date : new Date(s(bar.date)),
@@ -229,7 +229,7 @@ export async function getHistory(
       low: n(bar.low),
       close: n(bar.close),
       volume: n(bar.volume),
-      adjClose: nn(bar.adjClose) ?? n(bar.close),
+      adjClose: nn(bar.adjclose) ?? n(bar.close),
     }));
 
   setCached(cacheKey, data);
