@@ -31,6 +31,7 @@
  * for the final compose), and both go through `applyCompliance`.
  */
 
+import { getPreferredChatModel, openAIChat } from '@/lib/llm/openai';
 import type { AgentFinding, RalphResponse } from './types';
 
 // ── Public constants ────────────────────────────────────────────────────
@@ -197,16 +198,62 @@ export function appendDisclaimerIfMissing(answer: string): { answer: string; app
  * Group 1 of RALPH_TASK.md fills this in. It's a stub on the kickoff so the
  * compliance contract is in place without paying LLM cost on every request.
  */
-export async function llmComplianceCheck(_answer: string): Promise<{ passed: boolean; concerns: string[] }> {
+export async function llmComplianceCheck(answer: string): Promise<{ passed: boolean; concerns: string[] }> {
   if (process.env.COMPLIANCE_LLM_CHECK !== '1') {
     return { passed: true, concerns: [] };
   }
-  // TODO(group-1): Call openAIChat with a tight rubric:
-  //   - flag any first-person buy/sell language
-  //   - flag any unsourced target price
-  //   - flag any guarantee or absolute-safety language
-  //   - return JSON: { passed: boolean, concerns: string[] }
-  return { passed: true, concerns: [] };
+
+  const systemPrompt = `You are a strict compliance reviewer for a financial application in India.
+Your job is to analyze the provided response text and determine if it violates any of the following compliance rules:
+- Flag any first-person buy/sell language (e.g., "I recommend buying", "You should sell").
+- Flag any unsourced target price (e.g., mentioning a specific future price target without citing a specific external analyst or report).
+- Flag any guarantee or absolute-safety language (e.g., "guaranteed returns", "100% safe", "zero risk", "will definitely hit").
+
+You must return your findings as a valid JSON object with the following structure:
+{
+  "passed": boolean,
+  "concerns": string[]
+}
+If there are no compliance issues, set "passed" to true and "concerns" to an empty array.
+If there are issues, set "passed" to false and list the issues in "concerns".`;
+
+  try {
+    const result = await openAIChat({
+      model: getPreferredChatModel(),
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: answer }
+      ],
+      maxTokens: 500,
+      temperature: 0,
+    });
+
+    // Attempt to extract JSON from the response text
+    let jsonStr = result.text.trim();
+    if (jsonStr.startsWith('```json')) {
+      jsonStr = jsonStr.substring(7);
+      if (jsonStr.endsWith('```')) {
+        jsonStr = jsonStr.substring(0, jsonStr.length - 3);
+      }
+    } else if (jsonStr.startsWith('```')) {
+      jsonStr = jsonStr.substring(3);
+      if (jsonStr.endsWith('```')) {
+        jsonStr = jsonStr.substring(0, jsonStr.length - 3);
+      }
+    }
+
+    const parsed = JSON.parse(jsonStr.trim());
+    return {
+      passed: Boolean(parsed.passed),
+      concerns: Array.isArray(parsed.concerns) ? parsed.concerns.map(String) : [],
+    };
+  } catch (error) {
+    console.error('LLM Compliance Check failed:', error);
+    // Fail safe: if the LLM check fails to run or parse, we don't want to block everything,
+    // or maybe we do? Given the deterministic pass is always on, we default to passed=true on error
+    // to avoid breaking the system due to transient LLM API issues.
+    return { passed: true, concerns: ['LLM check failed to execute or parse'] };
+  }
 }
 
 // ── Internals ───────────────────────────────────────────────────────────
