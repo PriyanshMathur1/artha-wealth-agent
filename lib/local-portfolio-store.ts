@@ -66,50 +66,74 @@ export async function upsertLocalStock(
   userId: string,
   input: Omit<LocalStockHolding, 'id' | 'userId'>,
 ) {
-  const db = await readDb();
-  const index = db.stocks.findIndex(
-    (holding) => holding.userId === userId && holding.symbol === input.symbol && holding.accountId === input.accountId,
-  );
+  return (await upsertLocalStocks(userId, [input]))[0];
+}
 
-  if (index >= 0) {
-    db.stocks[index] = { ...db.stocks[index], ...input, userId };
-    await writeDb(db);
-    return db.stocks[index];
+export async function upsertLocalStocks(
+  userId: string,
+  inputs: Omit<LocalStockHolding, 'id' | 'userId'>[],
+) {
+  const db = await readDb();
+  const results: LocalStockHolding[] = [];
+
+  for (const input of inputs) {
+    const index = db.stocks.findIndex(
+      (holding) => holding.userId === userId && holding.symbol === input.symbol && holding.accountId === input.accountId,
+    );
+
+    if (index >= 0) {
+      db.stocks[index] = { ...db.stocks[index], ...input, userId };
+      results.push(db.stocks[index]);
+    } else {
+      const created: LocalStockHolding = {
+        id: db.nextStockId++,
+        userId,
+        ...input,
+      };
+      db.stocks.push(created);
+      results.push(created);
+    }
   }
 
-  const created: LocalStockHolding = {
-    id: db.nextStockId++,
-    userId,
-    ...input,
-  };
-  db.stocks.push(created);
   await writeDb(db);
-  return created;
+  return results;
 }
 
 export async function upsertLocalMf(
   userId: string,
   input: Omit<LocalMFHolding, 'id' | 'userId'>,
 ) {
-  const db = await readDb();
-  const index = db.mfs.findIndex(
-    (holding) => holding.userId === userId && holding.schemeCode === input.schemeCode,
-  );
+  return (await upsertLocalMfs(userId, [input]))[0];
+}
 
-  if (index >= 0) {
-    db.mfs[index] = { ...db.mfs[index], ...input, userId };
-    await writeDb(db);
-    return db.mfs[index];
+export async function upsertLocalMfs(
+  userId: string,
+  inputs: Omit<LocalMFHolding, 'id' | 'userId'>[],
+) {
+  const db = await readDb();
+  const results: LocalMFHolding[] = [];
+
+  for (const input of inputs) {
+    const index = db.mfs.findIndex(
+      (holding) => holding.userId === userId && holding.schemeCode === input.schemeCode,
+    );
+
+    if (index >= 0) {
+      db.mfs[index] = { ...db.mfs[index], ...input, userId };
+      results.push(db.mfs[index]);
+    } else {
+      const created: LocalMFHolding = {
+        id: db.nextMfId++,
+        userId,
+        ...input,
+      };
+      db.mfs.push(created);
+      results.push(created);
+    }
   }
 
-  const created: LocalMFHolding = {
-    id: db.nextMfId++,
-    userId,
-    ...input,
-  };
-  db.mfs.push(created);
   await writeDb(db);
-  return created;
+  return results;
 }
 
 export async function deleteLocalStock(userId: string, id: number) {
