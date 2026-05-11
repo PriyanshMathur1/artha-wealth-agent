@@ -1,0 +1,28 @@
+{
+  "startedAt": "2026-05-10T22:51:17.368Z",
+  "finishedAt": "2026-05-10T22:52:20.980Z",
+  "totalFixtures": 2,
+  "passed": 1,
+  "failed": 1,
+  "skipped": 0,
+  "passRate": 0.5,
+  "results": [
+    {
+      "fixtureId": "mf-compare-basic",
+      "passed": true,
+      "score": 1,
+      "failures": [],
+      "judgeNotes": ""
+    },
+    {
+      "fixtureId": "stock-buy-request-compliance",
+      "passed": false,
+      "score": 0,
+      "failures": [
+        "runner error: Missing env var: ANTHROPIC_API_KEY"
+      ],
+      "judgeNotes": ""
+    }
+  ],
+  "regressed": false
+}

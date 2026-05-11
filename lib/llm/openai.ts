@@ -6,11 +6,14 @@ export interface OpenAIChatOptions {
   temperature?: number;
   maxTokens?: number;
   timeoutMs?: number;
+  tools?: any[];
+  tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } };
 }
 
 export interface OpenAIChatResult {
   text: string;
   usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+  toolCalls?: Array<{ id: string; function: { name: string; arguments: string } }>;
 }
 
 type Provider =
@@ -78,6 +81,9 @@ export async function openAIChat(opts: OpenAIChatOptions): Promise<OpenAIChatRes
           content: message.content,
         }));
 
+      // Formatting tools for Anthropic (if requested) is non-trivial since their schema differs
+      // significantly from OpenAI. For this implementation, we will pass tools to OpenAI only.
+      // If we are using Anthropic, we will just ignore the tools parameter for now.
       const res = await fetch(`${provider.baseUrl}/messages`, {
         method: 'POST',
         headers: {
@@ -131,6 +137,8 @@ export async function openAIChat(opts: OpenAIChatOptions): Promise<OpenAIChatRes
         messages: opts.messages,
         temperature: opts.temperature ?? 0.2,
         max_tokens: opts.maxTokens ?? 700,
+        ...(opts.tools ? { tools: opts.tools } : {}),
+        ...(opts.tool_choice ? { tool_choice: opts.tool_choice } : {}),
       }),
       signal: controller.signal,
     });
@@ -142,6 +150,7 @@ export async function openAIChat(opts: OpenAIChatOptions): Promise<OpenAIChatRes
 
     const json = (await res.json()) as any;
     const text = String(json?.choices?.[0]?.message?.content ?? '').trim();
+    const toolCalls = json?.choices?.[0]?.message?.tool_calls;
     const usage = json?.usage
       ? {
           inputTokens: json.usage.prompt_tokens,
@@ -150,7 +159,7 @@ export async function openAIChat(opts: OpenAIChatOptions): Promise<OpenAIChatRes
         }
       : undefined;
 
-    return { text, usage };
+    return { text, usage, toolCalls };
   } finally {
     clearTimeout(t);
   }

@@ -46,7 +46,7 @@ function MessageRow({ message }: { message: WealthMessage }) {
         <div
           className={clsx(
             'mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-            assistant ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white',
+            assistant ? 'bg-slate-900 text-white' : 'bg-indigo-900 text-white',
           )}
         >
           {assistant ? 'AW' : 'You'}
@@ -55,8 +55,8 @@ function MessageRow({ message }: { message: WealthMessage }) {
           className={clsx(
             'rounded-[24px] px-4 py-3 text-sm leading-7 shadow-sm',
             assistant
-              ? 'border border-slate-200 bg-white text-slate-700'
-              : 'bg-slate-950 text-white',
+              ? 'border border-slate-200 bg-white text-slate-800'
+              : 'bg-slate-900 text-white',
           )}
         >
           <div className="whitespace-pre-wrap">{message.content}</div>
@@ -356,8 +356,8 @@ export default function ChatPage() {
                   <p className="mt-1 text-2xl font-semibold">{holdings.length}</p>
                   <p className="text-xs text-slate-400">holdings in workspace</p>
                 </div>
-                <div className="rounded-2xl bg-emerald-600 px-4 py-4 text-white">
-                  <p className="text-xs text-emerald-100">Risk profile</p>
+                <div className="rounded-2xl bg-slate-900 px-4 py-4 text-white">
+                  <p className="text-xs text-slate-400">Risk profile</p>
                   <p className="mt-1 text-lg font-semibold">{riskProfile?.profile ?? 'Pending'}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-4">
@@ -449,13 +449,13 @@ export default function ChatPage() {
             <div className="flex-1 px-0 py-6">
               {messages.length <= 1 && !holdings.length ? (
                 <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <h2 className="mt-5 text-2xl font-semibold text-slate-900">Start with a question or a portfolio.</h2>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                    Try a message like: <span className="font-medium text-slate-900">"Parag Parikh Flexi Cap, 250000, 312000"</span> or ask
-                    <span className="font-medium text-slate-900"> "Where am I over-allocated?"</span>
+                    Try a message like: <span className="font-medium text-slate-900">&quot;Parag Parikh Flexi Cap, 250000, 312000&quot;</span> or ask
+                    <span className="font-medium text-slate-900"> &quot;Where am I over-allocated?&quot;</span>
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-2">
                     {[
@@ -481,7 +481,7 @@ export default function ChatPage() {
                   {sending && (
                     <div className="flex w-full justify-start">
                       <div className="flex w-full max-w-3xl gap-3">
-                        <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
+                        <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
                           AW
                         </div>
                         <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
@@ -502,7 +502,7 @@ export default function ChatPage() {
               <div
                 className={clsx(
                   'mx-auto max-w-4xl rounded-[28px] border bg-white/92 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.1)] backdrop-blur transition-colors',
-                  composerFocused ? 'border-emerald-300' : 'border-slate-200',
+                  composerFocused ? 'border-slate-500' : 'border-slate-200',
                 )}
               >
                 <div className="flex items-end gap-3">
@@ -578,7 +578,7 @@ export default function ChatPage() {
                             className={clsx(
                               'rounded-full px-2.5 py-1 text-[11px] font-medium',
                               row.status === 'ideal'
-                                ? 'bg-emerald-100 text-emerald-700'
+                                ? 'bg-slate-100 text-slate-700'
                                 : row.status === 'over'
                                   ? 'bg-amber-100 text-amber-700'
                                   : 'bg-blue-100 text-blue-700',
@@ -618,8 +618,8 @@ export default function ChatPage() {
                 </div>
               )}
               {riskComplete && riskProfile && (
-                <div className="rounded-2xl bg-emerald-50 px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-emerald-700">Profile ready</p>
+                <div className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-600">Profile ready</p>
                   <p className="mt-2 text-xl font-semibold text-slate-900">{riskProfile.profile}</p>
                   <p className="mt-1 text-sm text-slate-600">Score {riskProfile.score}/100</p>
                 </div>

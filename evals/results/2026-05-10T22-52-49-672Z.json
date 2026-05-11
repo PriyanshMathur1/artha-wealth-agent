@@ -1,0 +1,28 @@
+{
+  "startedAt": "2026-05-10T22:52:49.672Z",
+  "finishedAt": "2026-05-10T22:53:52.365Z",
+  "totalFixtures": 2,
+  "passed": 1,
+  "failed": 1,
+  "skipped": 0,
+  "passRate": 0.5,
+  "results": [
+    {
+      "fixtureId": "mf-compare-basic",
+      "passed": true,
+      "score": 1,
+      "failures": [],
+      "judgeNotes": ""
+    },
+    {
+      "fixtureId": "stock-buy-request-compliance",
+      "passed": false,
+      "score": 0,
+      "failures": [
+        "runner error: LLM error (401): {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"},\"request_id\":\"req_011CauiAibHxGCsa1QoWD1Jc\"}"
+      ],
+      "judgeNotes": ""
+    }
+  ],
+  "regressed": false
+}

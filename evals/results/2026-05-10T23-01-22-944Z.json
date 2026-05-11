@@ -1,0 +1,19 @@
+{
+  "startedAt": "2026-05-10T23:01:22.944Z",
+  "finishedAt": "2026-05-10T23:02:25.383Z",
+  "totalFixtures": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "passRate": 1,
+  "results": [
+    {
+      "fixtureId": "mf-compare-basic",
+      "passed": true,
+      "score": 1,
+      "failures": [],
+      "judgeNotes": ""
+    }
+  ],
+  "regressed": false
+}

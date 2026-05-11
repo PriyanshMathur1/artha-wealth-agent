@@ -122,7 +122,7 @@ const respondNode = async (state: {
   try {
     const model = getPreferredChatModel();
     const system = [
-      'You are Artha Wealth, an AI-powered portfolio copilot for Indian mutual fund investors.',
+      'You are Artha Wealth, a premium AI-powered portfolio copilot for Indian mutual fund investors. Provide highly professional, insightful, and concise financial intelligence. Avoid fluff.',
       'Use only the supplied grounded context and compliance-safe language.',
       ARTHA_WEALTH_KNOWLEDGE,
       'Never tell the user to buy or sell a specific fund.',
@@ -149,7 +149,22 @@ const respondNode = async (state: {
       maxTokens: 850,
     });
 
-    const parsed = JSON.parse(result.text) as { answer?: string; suggestions?: string[]; confidence?: 'high' | 'medium' | 'low' };
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(result.text);
+    } catch {
+      const match = result.text.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          parsed = JSON.parse(match[0]);
+        } catch {
+          parsed = {};
+        }
+      } else {
+        parsed = {};
+      }
+    }
+
     return {
       answer: parsed.answer ?? 'I can help review your portfolio once I have a clearer question or more portfolio context.',
       suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 4) : ['Summarize current allocation', 'Show concentration review'],
