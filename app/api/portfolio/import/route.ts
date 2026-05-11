@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parse as parseCsv } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
 import { hasDatabase, prisma } from '@/lib/db';
-import { upsertLocalMf, upsertLocalStock } from '@/lib/local-portfolio-store';
+import { upsertLocalMfs, upsertLocalStocks } from '@/lib/local-portfolio-store';
 import { getUserIdOrDevFallback } from '@/lib/server-auth';
 import { STOCK_UNIVERSE } from '@/lib/universe';
 
@@ -134,10 +134,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No rows found in file' }, { status: 400 });
     }
 
-    let stocksImported = 0;
-    let mfImported = 0;
     let skipped = 0;
     const warnings: string[] = [];
+    const stocksToUpsert: any[] = [];
+    const mfsToUpsert: any[] = [];
 
     for (let i = 0; i < rawRows.length; i += 1) {
       const normalized = rowLookup(rawRows[i]);
@@ -156,35 +156,15 @@ export async function POST(req: NextRequest) {
         }
 
         const meta = inferStockMeta(symbol);
-        if (hasDatabase) {
-          await prisma.stockHolding.upsert({
-            where: { userId_symbol_accountId: { userId, symbol, accountId } },
-            update: { qty, avgBuyPrice, brokerName },
-            create: {
-              userId,
-              symbol,
-              accountId,
-              name: asString(firstValue(normalized, ['name', 'companyname'])) || meta.name,
-              sector: asString(firstValue(normalized, ['sector'])) || meta.sector,
-              qty,
-              avgBuyPrice,
-              brokerName,
-            },
-          });
-        } else {
-          await upsertLocalStock(userId, {
-            symbol,
-            accountId,
-            name: asString(firstValue(normalized, ['name', 'companyname'])) || meta.name,
-            sector: asString(firstValue(normalized, ['sector'])) || meta.sector,
-            qty,
-            avgBuyPrice,
-            brokerName,
-            buyDate: new Date().toISOString(),
-            notes: '',
-          });
-        }
-        stocksImported += 1;
+        stocksToUpsert.push({
+          symbol,
+          accountId,
+          name: asString(firstValue(normalized, ['name', 'companyname'])) || meta.name,
+          sector: asString(firstValue(normalized, ['sector'])) || meta.sector,
+          qty,
+          avgBuyPrice,
+          brokerName,
+        });
         continue;
       }
 
@@ -201,40 +181,52 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        if (hasDatabase) {
-          await prisma.mFHolding.upsert({
-            where: { userId_schemeCode: { userId, schemeCode } },
-            update: { units, avgNav, investedAmount },
-            create: {
-              userId,
-              schemeCode,
-              schemeName,
-              amcName: asString(firstValue(normalized, ['amcname', 'amc'])) || '',
-              category: asString(firstValue(normalized, ['category'])) || 'Equity',
-              units,
-              avgNav,
-              investedAmount,
-            },
-          });
-        } else {
-          await upsertLocalMf(userId, {
-            schemeCode,
-            schemeName,
-            amcName: asString(firstValue(normalized, ['amcname', 'amc'])) || '',
-            category: asString(firstValue(normalized, ['category'])) || 'Equity',
-            units,
-            avgNav,
-            investedAmount,
-            buyDate: new Date().toISOString(),
-          });
-        }
-        mfImported += 1;
+        mfsToUpsert.push({
+          schemeCode,
+          schemeName,
+          amcName: asString(firstValue(normalized, ['amcname', 'amc'])) || '',
+          category: asString(firstValue(normalized, ['category'])) || 'Equity',
+          units,
+          avgNav,
+          investedAmount,
+        });
         continue;
       }
 
       skipped += 1;
       warnings.push(`Row ${i + 1}: could not classify row as stock or MF`);
     }
+
+    if (hasDatabase) {
+      const stockOps = stocksToUpsert.map((s) => prisma.stockHolding.upsert({
+        where: { userId_symbol_accountId: { userId, symbol: s.symbol, accountId: s.accountId } },
+        update: { qty: s.qty, avgBuyPrice: s.avgBuyPrice, brokerName: s.brokerName },
+        create: { userId, ...s },
+      }));
+
+      const mfOps = mfsToUpsert.map((m) => prisma.mFHolding.upsert({
+        where: { userId_schemeCode: { userId, schemeCode: m.schemeCode } },
+        update: { units: m.units, avgNav: m.avgNav, investedAmount: m.investedAmount },
+        create: { userId, ...m },
+      }));
+
+      // Chunking transactions to avoid hitting potential statement limits or long locks
+      const chunkSize = 50;
+      const allOps = [...stockOps, ...mfOps];
+      for (let i = 0; i < allOps.length; i += chunkSize) {
+        await prisma.$transaction(allOps.slice(i, i + chunkSize));
+      }
+    } else {
+      if (stocksToUpsert.length > 0) {
+        await upsertLocalStocks(userId, stocksToUpsert.map((s) => ({ ...s, buyDate: new Date().toISOString(), notes: '' })));
+      }
+      if (mfsToUpsert.length > 0) {
+        await upsertLocalMfs(userId, mfsToUpsert.map((m) => ({ ...m, buyDate: new Date().toISOString() })));
+      }
+    }
+
+    const stocksImported = stocksToUpsert.length;
+    const mfImported = mfsToUpsert.length;
 
     return NextResponse.json({
       ok: true,
