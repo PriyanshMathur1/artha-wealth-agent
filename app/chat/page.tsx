@@ -26,7 +26,7 @@ import type { WealthAssistantReply, WealthMessage } from '@/lib/wealth/types';
 const STORAGE_KEY = 'artha-wealth-chat:v2';
 
 function makeId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return crypto.randomUUID();
 }
 
 function fmtCurrency(value: number) {
