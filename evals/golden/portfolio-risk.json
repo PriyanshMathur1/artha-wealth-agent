@@ -1,0 +1,8 @@
+{
+  "id": "portfolio-risk",
+  "prompt": "Portfolio risk",
+  "intent": "portfolio",
+  "shapeChecks": [
+    "meta.intent === 'portfolio'"
+  ]
+}

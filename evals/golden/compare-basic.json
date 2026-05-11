@@ -1,0 +1,13 @@
+{
+  "id": "compare-basic",
+  "prompt": "HDFCBANK vs ICICIBANK",
+  "intent": "compare",
+  "mustContain": [
+    "HDFCBANK",
+    "ICICIBANK"
+  ],
+  "shapeChecks": [
+    "meta.intent === 'compare'",
+    "meta.compareKind === 'stock'"
+  ]
+}

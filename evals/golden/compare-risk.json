@@ -1,0 +1,8 @@
+{
+  "id": "compare-risk",
+  "prompt": "Compare risk HDFCBANK ICICIBANK",
+  "intent": "compare",
+  "shapeChecks": [
+    "meta.intent === 'compare'"
+  ]
+}

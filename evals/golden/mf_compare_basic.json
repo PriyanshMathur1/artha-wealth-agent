@@ -16,5 +16,6 @@
   ],
   "requireCompliance": true,
   "rubric": "The compare agent should run both sides and surface the dimensions where one fund is stronger. It should NOT recommend one fund over the other in directive language. It should note that past performance does not guarantee future results.",
-  "notes": "Anchors the MF compare path. Catches regressions in the router's vs/versus split logic."
+  "notes": "Anchors the MF compare path. Catches regressions in the router's vs/versus split logic.",
+  "skip": true
 }

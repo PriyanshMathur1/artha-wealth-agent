@@ -1,0 +1,14 @@
+{
+  "id": "stock-fundamental",
+  "prompt": "Fundamentals of TCS",
+  "intent": "stock",
+  "mustContain": [
+    "Composite",
+    "TCS"
+  ],
+  "shapeChecks": [
+    "meta.intent === 'stock'",
+    "agents.length >= 1",
+    "meta.ticker === 'TCS'"
+  ]
+}
