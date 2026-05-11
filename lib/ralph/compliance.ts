@@ -31,6 +31,7 @@
  * for the final compose), and both go through `applyCompliance`.
  */
 
+import { getPreferredChatModel, openAIChat } from '@/lib/llm/openai';
 import type { AgentFinding, RalphResponse } from './types';
 
 // ── Public constants ────────────────────────────────────────────────────
@@ -197,16 +198,58 @@ export function appendDisclaimerIfMissing(answer: string): { answer: string; app
  * Group 1 of RALPH_TASK.md fills this in. It's a stub on the kickoff so the
  * compliance contract is in place without paying LLM cost on every request.
  */
-export async function llmComplianceCheck(_answer: string): Promise<{ passed: boolean; concerns: string[] }> {
+export async function llmComplianceCheck(answer: string): Promise<{ passed: boolean; concerns: string[] }> {
   if (process.env.COMPLIANCE_LLM_CHECK !== '1') {
     return { passed: true, concerns: [] };
   }
-  // TODO(group-1): Call openAIChat with a tight rubric:
-  //   - flag any first-person buy/sell language
-  //   - flag any unsourced target price
-  //   - flag any guarantee or absolute-safety language
-  //   - return JSON: { passed: boolean, concerns: string[] }
-  return { passed: true, concerns: [] };
+
+  const systemPrompt = `You are a strict compliance reviewer for a financial AI assistant.
+Your job is to read the provided text and check for advisory language that violates SEBI (Securities and Exchange Board of India) guidelines.
+Artha (the AI) is NOT a registered investment adviser.
+
+You must FLAG the response if it contains any of the following:
+1. First-person buy/sell language (e.g., "I recommend buying", "you should sell").
+2. Unsourced target prices (any prediction of a specific future price).
+3. Guarantee or absolute-safety language (e.g., "100% safe", "guaranteed returns", "zero risk").
+
+Return ONLY a JSON object with the following schema:
+{
+  "passed": boolean, // true if NO violations found, false if ANY violation found
+  "concerns": string[] // list of specific concerns/violations found, or empty array if none
+}`;
+
+  try {
+    const res = await openAIChat({
+      model: getPreferredChatModel(),
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: answer },
+      ],
+      temperature: 0.1,
+      maxTokens: 500,
+    });
+
+    let text = res.text.trim();
+    // Strip markdown code block if present
+    if (text.startsWith('\`\`\`json')) {
+      text = text.slice(7);
+    } else if (text.startsWith('\`\`\`')) {
+      text = text.slice(3);
+    }
+    if (text.endsWith('\`\`\`')) {
+      text = text.slice(0, -3);
+    }
+    text = text.trim();
+
+    const parsed = JSON.parse(text);
+    return {
+      passed: Boolean(parsed.passed),
+      concerns: Array.isArray(parsed.concerns) ? parsed.concerns : [],
+    };
+  } catch (error) {
+    // Fail open if the LLM check itself fails (e.g., timeout, bad JSON)
+    return { passed: true, concerns: [] };
+  }
 }
 
 // ── Internals ───────────────────────────────────────────────────────────
