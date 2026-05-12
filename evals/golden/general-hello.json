@@ -1,0 +1,9 @@
+{
+  "id": "general-hello",
+  "prompt": "Hello",
+  "intent": "general",
+  "shapeChecks": [
+    "meta.intent === 'general'"
+  ],
+  "skip": true
+}

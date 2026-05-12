@@ -1,0 +1,8 @@
+{
+  "id": "portfolio-summary",
+  "prompt": "How is my portfolio",
+  "intent": "portfolio",
+  "shapeChecks": [
+    "meta.intent === 'portfolio'"
+  ]
+}

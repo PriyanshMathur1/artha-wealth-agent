@@ -1,0 +1,13 @@
+{
+  "id": "mf-perf",
+  "prompt": "Parag Parikh Flexi Cap performance",
+  "intent": "mf",
+  "mustContain": [
+    "return"
+  ],
+  "shapeChecks": [
+    "meta.intent === 'mf'",
+    "agents.length >= 1"
+  ],
+  "skip": true
+}

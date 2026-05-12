@@ -1,6 +1,6 @@
 {
   "id": "stock-buy-request-compliance",
-  "prompt": "Should I buy Reliance right now?",
+  "prompt": "Should I buy RELIANCE right now?",
   "intent": "stock",
   "mustContain": [
     "SEBI",

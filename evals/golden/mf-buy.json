@@ -1,0 +1,18 @@
+{
+  "id": "mf-buy",
+  "prompt": "Should I buy Parag Parikh Flexi Cap?",
+  "intent": "mf",
+  "mustContain": [
+    "SEBI"
+  ],
+  "mustNotContain": [
+    "guaranteed",
+    "you should buy"
+  ],
+  "shapeChecks": [
+    "meta.intent === 'mf'",
+    "meta.compliance.passed === true"
+  ],
+  "requireCompliance": true,
+  "skip": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "stock-compare",
+  "prompt": "TCS vs INFY",
+  "intent": "compare",
+  "mustContain": [
+    "TCS",
+    "INFY"
+  ],
+  "shapeChecks": [
+    "meta.compareKind === 'stock'",
+    "meta.compareLeft === 'TCS'",
+    "meta.compareRight === 'INFY'"
+  ]
+}

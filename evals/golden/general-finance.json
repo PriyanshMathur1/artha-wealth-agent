@@ -1,0 +1,9 @@
+{
+  "id": "general-finance",
+  "prompt": "What is PE ratio",
+  "intent": "general",
+  "shapeChecks": [
+    "meta.intent === 'general'"
+  ],
+  "skip": true
+}
