@@ -198,23 +198,76 @@ export async function POST(req: NextRequest) {
     }
 
     if (hasDatabase) {
-      const stockOps = stocksToUpsert.map((s) => prisma.stockHolding.upsert({
-        where: { userId_symbol_accountId: { userId, symbol: s.symbol, accountId: s.accountId } },
-        update: { qty: s.qty, avgBuyPrice: s.avgBuyPrice, brokerName: s.brokerName },
-        create: { userId, ...s },
-      }));
+      const uniqueStocks = new Map<string, any>();
+      for (const s of stocksToUpsert) {
+        uniqueStocks.set(`${s.symbol}_${s.accountId}`, s);
+      }
+      const finalStocks = Array.from(uniqueStocks.values());
 
-      const mfOps = mfsToUpsert.map((m) => prisma.mFHolding.upsert({
-        where: { userId_schemeCode: { userId, schemeCode: m.schemeCode } },
-        update: { units: m.units, avgNav: m.avgNav, investedAmount: m.investedAmount },
-        create: { userId, ...m },
-      }));
+      const uniqueMfs = new Map<string, any>();
+      for (const m of mfsToUpsert) {
+        uniqueMfs.set(m.schemeCode, m);
+      }
+      const finalMfs = Array.from(uniqueMfs.values());
+
+      const ops: any[] = [];
+      const stocksToCreate: any[] = [];
+      const mfsToCreate: any[] = [];
+
+      if (finalStocks.length > 0) {
+        const existingStocks = await prisma.stockHolding.findMany({
+          where: {
+            userId,
+            symbol: { in: [...new Set(finalStocks.map((s) => s.symbol))] },
+          },
+          select: { symbol: true, accountId: true },
+        });
+
+        const existingStockSet = new Set(existingStocks.map((s) => `${s.symbol}_${s.accountId}`));
+
+        for (const s of finalStocks) {
+          if (existingStockSet.has(`${s.symbol}_${s.accountId}`)) {
+            ops.push(prisma.stockHolding.update({
+              where: { userId_symbol_accountId: { userId, symbol: s.symbol, accountId: s.accountId } },
+              data: { qty: s.qty, avgBuyPrice: s.avgBuyPrice, brokerName: s.brokerName },
+            }));
+          } else {
+            stocksToCreate.push({ userId, ...s });
+          }
+        }
+      }
+
+      if (finalMfs.length > 0) {
+        const existingMfs = await prisma.mFHolding.findMany({
+          where: {
+            userId,
+            schemeCode: { in: [...new Set(finalMfs.map((m) => m.schemeCode))] },
+          },
+          select: { schemeCode: true },
+        });
+
+        const existingMfSet = new Set(existingMfs.map((m) => m.schemeCode));
+
+        for (const m of finalMfs) {
+          if (existingMfSet.has(m.schemeCode)) {
+            ops.push(prisma.mFHolding.update({
+              where: { userId_schemeCode: { userId, schemeCode: m.schemeCode } },
+              data: { units: m.units, avgNav: m.avgNav, investedAmount: m.investedAmount },
+            }));
+          } else {
+            mfsToCreate.push({ userId, ...m });
+          }
+        }
+      }
+
+      // Group creations into minimal operations
+      if (stocksToCreate.length > 0) ops.push(prisma.stockHolding.createMany({ data: stocksToCreate }));
+      if (mfsToCreate.length > 0) ops.push(prisma.mFHolding.createMany({ data: mfsToCreate }));
 
       // Chunking transactions to avoid hitting potential statement limits or long locks
       const chunkSize = 50;
-      const allOps = [...stockOps, ...mfOps];
-      for (let i = 0; i < allOps.length; i += chunkSize) {
-        await prisma.$transaction(allOps.slice(i, i + chunkSize));
+      for (let i = 0; i < ops.length; i += chunkSize) {
+        await prisma.$transaction(ops.slice(i, i + chunkSize));
       }
     } else {
       if (stocksToUpsert.length > 0) {
